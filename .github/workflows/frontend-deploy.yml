@@ -1,0 +1,43 @@
+name: Deploy Frontend to S3
+
+on:
+  push:
+    branches: [feat/aws]
+
+env:
+  AWS_REGION: eu-north-1
+
+jobs:
+  deploy-frontend:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm i
+
+      - name: Build React app
+        run: npm run build
+        env:
+          VITE_API_URL: http://${{ vars.ALB_DNS_NAME }}/api
+
+      - name: Upload to S3
+        run: |
+          aws s3 sync ./dist s3://${{ vars.S3_BUCKET_NAME }}/ \
+            --delete
