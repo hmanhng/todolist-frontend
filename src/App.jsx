@@ -95,13 +95,13 @@ function App() {
   return (
     <div style={styles.container}>
       <h1 style={styles.title}>Todo List</h1>
-      
+
       <form onSubmit={addTodo} style={styles.form}>
         <input
           type="text"
           value={newTodo}
           onChange={(e) => setNewTodo(e.target.value)}
-          placeholder="Abcxyz..."
+          placeholder="hello world"
           style={styles.input}
         />
         <button type="submit" style={styles.addButton}>Add</button>
