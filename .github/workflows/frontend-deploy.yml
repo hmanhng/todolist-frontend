@@ -1,4 +1,4 @@
-name: Deploy Frontend to S3
+name: Build Frontend Image to ECR
 
 on:
   push:
@@ -6,9 +6,10 @@ on:
 
 env:
   AWS_REGION: eu-north-1
+  ECR_REPOSITORY: todolist-dev-argocd-frontend
 
 jobs:
-  deploy-frontend:
+  build-frontend:
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -24,20 +25,22 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push frontend image
+        uses: docker/build-push-action@v5
         with:
-          node-version: '18'
-
-      - name: Install dependencies
-        run: npm i
-
-      - name: Build React app
-        run: npm run build
-        env:
-          VITE_API_URL: http://${{ vars.ALB_DNS_NAME }}/api/todos
-
-      - name: Upload to S3
-        run: |
-          aws s3 sync ./dist s3://${{ vars.S3_BUCKET_NAME }}/ \
-            --delete
+          context: .
+          push: true
+          build-args: |
+            VITE_API_URL=/api/todos
+          tags: |
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
