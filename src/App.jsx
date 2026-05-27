@@ -101,7 +101,7 @@ function App() {
           type="text"
           value={newTodo}
           onChange={(e) => setNewTodo(e.target.value)}
-          placeholder="hello world"
+          placeholder="abcxyz"
           style={styles.input}
         />
         <button type="submit" style={styles.addButton}>Add</button>
