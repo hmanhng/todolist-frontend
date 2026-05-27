@@ -9,14 +9,18 @@ RUN npm install
 COPY . .
 
 ARG VITE_API_URL
-ENV VITE_API_URL=${VITE_API_URL:-http://localhost:3001/api/todos}
+ENV VITE_API_URL=${VITE_API_URL:-/api/todos}
 
 RUN npm run build
 
-FROM nginx:alpine
+FROM node:18-alpine
 
-COPY --from=builder /app/dist /usr/share/nginx/html
+WORKDIR /app
 
-EXPOSE 80
+RUN npm install -g serve@14.2.4
 
-CMD ["nginx", "-g", "daemon off;"]
+COPY --from=builder /app/dist ./dist
+
+EXPOSE 3000
+
+CMD ["serve", "-s", "dist", "-l", "3000"]
